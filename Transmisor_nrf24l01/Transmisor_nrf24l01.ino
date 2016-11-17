@@ -4,9 +4,10 @@
 #include <DHT.h>      //Semsor de temperatura
 
 //Objeto del transceptor de radio
-RF24 radio(49, 53);
+RF24 radio(48, 49);
+
 //Objeto del sensor de temperatura
-DHT dht(22, DHT22);
+DHT dht(46, DHT22);
 
 //Estructura con el paquete de datos
 struct PAQUETE {
@@ -25,8 +26,11 @@ void setup() {
   Serial.begin(9600);
 
   //Inicializa el transceptor nRF24L01+ y lo coloca en modo de
-  //transmision
+  //transmision. La potencia se establece al minimo para evitar
+  //saturar el receptor, ya que el transmisor tiene un
+  //amplificador LNA para incrementar el alcance.
   radio.begin();
+  radio.setPALevel(RF24_PA_MIN);
   radio.openWritingPipe(dirEscr);
 
   //Inicializa la libreria del sensor de humedad/temperatura
@@ -47,7 +51,8 @@ void loop() {
 
   //Envia la estructura mediante el transceptor. Para ello se
   //pasa la direccion de la estructura y su longitud.
-  radio.write(&datos, sizeof(datos));
+  if (!radio.write(&datos, sizeof(datos)))
+    Serial.println("Error de transmision - no hay respuesta.");
 
   //Espera un segundo antes de volver a transmitir.
   delay(1000);
